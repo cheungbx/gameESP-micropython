@@ -29,7 +29,7 @@ Simple MicroPython game modules and sample games for ESP8266 and ESP32
 #
 #
 #-----------------------------------------
-# SPI version of game board layout
+# ESP8266 SPI SSD1306 version of game board layout
 # ----------------------------------------
 # micropython game hat module to use SSD1306 SPI OLED, 6 buttons and a paddle
 # SPI display runs 5 times faster than I2C  display in micropython and you need this speeds
@@ -71,7 +71,7 @@ Simple MicroPython game modules and sample games for ESP8266 and ESP32
 # 3.3V-9K-Up-9K-Left-12K-Right-9K-Down-9K-A button-12K-B Button-9K-GND
 #
 #-----------------------------------------
-# I2C version of game board layout
+# ESP8266 I2C SSD1306 version of game board layout
 # ----------------------------------------
 # mocropython game hat module to use SSD1306 I2C OLED, 6 buttons and a paddle
 # I2C display runs 5 times slower than I2C display in micropython.
@@ -96,12 +96,12 @@ Simple MicroPython game modules and sample games for ESP8266 and ESP32
 #  GPIO16 cannot be pulled high by softeware, connect a 10K resisor to VCC to pull high
 #
 #
-'''
+#==================================================================================
 ESP32 Game board
 -----------------
-OLED SPI
-========
-VCC     -  3V3
+ESP32 OLED SPI SSD1306
+==============
+VCC     -  3.3V
 GND     -  GND
 D0/SCK  -  IO18-VSPI-SCK
 D1/MOSI -  IO23-VSPI-MOSI
@@ -112,17 +112,13 @@ LED/BLK -  IO14
 
 MISO    -  IO19-VSPI-MISO (not required for OLED)
 
-TF Card
-================
-CS -      IO13
-MOSI -    IO15
-SCK -     IO14
-MISO -    IO2
 
-Power
-======
-GND-100K-IO36(VP)-100K-VBat(3.7V)
-GND-0.1uF-IO36
+ESP32 OLED I2C SSD1306
+================
+VCC  -  3.3V
+GND   - GND
+SCL -   IO 22
+SDA     IO 21
 
 Audio
 ======
