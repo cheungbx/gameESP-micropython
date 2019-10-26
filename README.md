@@ -86,7 +86,7 @@ Simple MicroPython game modules and sample games for ESP8266 and ESP32
 # Speaker
 # GPIO15  D8     Speaker
 #
-# Buttons are connect to GND when pressed, except for B button
+# Buttons are connect to GND when pressed
 # GPIO12  D6——   Left  
 # GPIO13  D7——   Right     
 # GPIO14  D5——   UP    
