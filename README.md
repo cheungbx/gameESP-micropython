@@ -97,57 +97,56 @@ Simple MicroPython game modules and sample games for ESP8266 and ESP32
 #
 #
 #==================================================================================
-ESP32 Game board
------------------
-ESP32 OLED SPI SSD1306
-==============
-VCC     -  3.3V
-GND     -  GND
-D0/SCK  -  IO18-VSPI-SCK
-D1/MOSI -  IO23-VSPI-MOSI
-RES     -  IO4 for ESP32
-DC      -  IO21
-CS      -  IO5-VSPI CS0
-LED/BLK -  IO14
+# ESP32 Game board
+# -----------------
+# ESP32 OLED SPI SSD1306
+# ==============
+# VCC     -  3.3V
+# GND     -  GND
+# D0/SCK  -  IO18-VSPI-SCK
+# D1/MOSI -  IO23-VSPI-MOSI
+# RES     -  IO4 for ESP32
+# DC      -  IO21
+# CS      -  IO5-VSPI CS0
+# LED/BLK -  IO14
 
-MISO    -  IO19-VSPI-MISO (not required for OLED)
-
-
-ESP32 OLED I2C SSD1306
-================
-VCC  -  3.3V
-GND   - GND
-SCL -   IO 22
-SDA     IO 21
-
-Audio
-======
-Speaker- - GND
-Speaker+ - 10K VR- IO26
-
-Paddle
-======
-GND
-VN/IO39
-4.7K-VCC
+# MISO    -  IO19-VSPI-MISO (not required for OLED)
 
 
-D-PAD Buttons
-=============
-tie one end to 3V3
-UP        IO35-10K-GND
-Down-10K  IO35
-Left      IO34-10K-GND
-Right-10K IO34
+# ESP32 OLED I2C SSD1306
+# ================
+# VCC  -  3.3V
+# GND   - GND
+# SCL -   IO 22
+# SDA     IO 21
 
-Other Buttons
-============
-tie one end to GND
-Menu      IO13
-Volume    IO00-10K-3v3
-Select    IO27
-Start     IO39(VN)-10K-3v3
-B         IO33
-A         IO32
+# Audio
+# ======
+# Speaker- - GND
+# Speaker+ - 10K VR- IO26
 
-'''
+# Paddle (10K VR)
+# ======
+# left   GND
+# middle VN/IO39
+# right  VCC
+
+
+# D-PAD Buttons
+# =============
+# tie one end to 3V3
+# UP        IO35-10K-GND
+# Down-10K  IO35
+# Left      IO34-10K-GND
+# Right-10K IO34
+
+# Other Buttons
+# ============
+# tie one end to GND
+# Menu      IO13
+# Volume    IO00-10K-3v3
+# Select    IO27
+# Start     IO39(VN)-10K-3v3
+# B         IO33
+# A         IO32
+
