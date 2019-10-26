@@ -81,13 +81,13 @@
 # Speaker
 # GPIO15  D8     Speaker
 #
-# Buttons are connect to GND when pressed, except for B button
+# Buttons are connect to GND when pressed
 # GPIO12  D6——   Left  
 # GPIO13  D7——   Right     
 # GPIO14  D5——   UP    
 # GPIO2   D4——   Down    
 # GPIO0   D3——   A
-# GPIO16   D0——  B
+# GPIO16  D0——   B
 # * GPIO16 cannot be pulled high by softeware, connect a 10K resisor to VCC to pull high
 
 import utime
