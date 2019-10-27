@@ -1,5 +1,6 @@
 # gameESP-micropython
-Simple MicroPython game modules and sample games for ESP8266 and ESP32
+# Simple MicroPython game modules and sample games for ESP8266 and ESP32 
+#
 # gameESP.py for esp8266 or esp32
 # if you are using esp8266 boards, copy game8266.py as gameESP.py or use mpy-cross to compile to gameESP.mpy
 # if you are using esp32 boards, copy game32.py as gameESP.py or use mpy-cross to compile to gameESP.mpy
@@ -99,6 +100,10 @@ Simple MicroPython game modules and sample games for ESP8266 and ESP32
 #==================================================================================
 # ESP32 Game board
 # -----------------
+# The pin layout is exactly the same as that of the Odroid-Go
+# so this library can be used on the micropython firmware of the Odroid-Go
+#
+#------------------------
 # ESP32 OLED SPI SSD1306
 # ==============
 # VCC     -  3.3V
@@ -109,10 +114,17 @@ Simple MicroPython game modules and sample games for ESP8266 and ESP32
 # DC      -  IO21
 # CS      -  IO5-VSPI CS0
 # LED/BLK -  IO14
-
+#
 # MISO    -  IO19-VSPI-MISO (not required for OLED)
-
-
+#
+#
+# TF Card Odroid-go (optional)
+# ================
+# CS -      IO22 VSPI CS1
+# MOSI - IO23 VSPI MOSI
+# MISO -  IO19 VSPI SCK
+# SCK -   IO18 VSPI MISO
+#
 # ESP32 OLED I2C SSD1306
 # ================
 # VCC  -  3.3V
