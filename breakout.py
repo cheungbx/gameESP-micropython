@@ -325,7 +325,7 @@ def load_level(level, display) :
 
     return bricks
 
-
+demoOn = False
 exitGame = False
 while not exitGame :
     paddle_width = 22
@@ -336,7 +336,11 @@ while not exitGame :
 
     gameOver = False
     usePaddle = False
-    demo = False
+    if demoOn :
+        demo = True
+    else :
+        demo = False
+
 
     while True:
         g.display.fill(0)
@@ -363,13 +367,14 @@ while not exitGame :
             exitGame = True
             gameOver= True
             break
-        elif g.justPressed(g.btnA) :
+        elif g.justPressed(g.btnA) or demoOn :
             if demo :
                 g.display.fill(0)
                 g.display.text('DEMO', 5, 0, 1)
                 g.display.text('B to Stop', 5, 30, 1)
                 g.display.show()
                 sleep_ms(1000)
+                demoOn = True
             break
         elif g.justPressed(g.btnU) :
             usePaddle =  not usePaddle
@@ -420,8 +425,9 @@ while not exitGame :
                   g.display.show()
                   sleep_ms(1000)
                   gameOver = True
+                  demoOn = False
                 else :
-                  paddle.h_position(balls[0].x - 8 + g.random (0,7))
+                  paddle.h_position(balls[0].x - 5 + g.random (0,7))
               elif usePaddle :
                 paddle.h_position(int(g.getPaddle() // 9.57))
               else :
