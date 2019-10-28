@@ -85,11 +85,14 @@ def drawScore () :
 
 
 exitGame = False
-
+demoOn = False
 while not exitGame:
   gameOver = False
   usePaddle = False
-  demo = False
+  if demoOn :
+      demo = True
+  else :
+      demo = False
   life = 3
 
   #menu screen
@@ -118,8 +121,9 @@ while not exitGame:
         exitGame = True
         gameOver= True
         break
-    elif g.justPressed(g.btnA) :
+    elif g.justPressed(g.btnA) or demoOn :
         if demo :
+            demoOn = True
             g.display.fill(0)
             g.display.text('DEMO', 5, 0, 1)
             g.display.text('B to Stop', 5, 30, 1)
@@ -143,7 +147,7 @@ while not exitGame:
   postureA = False
   postureS = False
   # Chance from 1 to 128
-  aBulletChance = 1
+  aBulletChance = 0
   spaceshipChance = 1
 
   while not gameOver:
@@ -160,7 +164,7 @@ while not exitGame:
       aBullets = []
       setUpInvaders()
       gun = Rect(screenL+int((screenR-screenL)/2), screenB, gunW, gunH)
-      aBulletChance = 50 + level * 10
+      aBulletChance = 5 + level * 5
 
 
 
@@ -212,6 +216,7 @@ while not exitGame:
     if demo :
         if g.justPressed (g.btnB) :
             gameOver = True
+            demoOn = False
 
         if g.random (0,1) and len(bullets) < 2:
             bullets.append(Rect(gun.x+3, gun.y-1, 1, 3))
@@ -274,7 +279,7 @@ while not exitGame:
 
     # Launch Alien bullets
     for i in invaders:
-      if g.random (0,1000) * len (invaders) < aBulletChance and len(aBullets) < 3 :
+      if g.random (0,1000) * len (invaders) * 10 < aBulletChance and len(aBullets) < 3 :
         aBullets.append(Rect(i.x+2, i.y, 1, 3))
 
     # move Alien bullets
@@ -311,6 +316,11 @@ while not exitGame:
     if lost :
       lost = False;
       life -= 1
+      g.playTone ('f4',100)
+      g.playTone ('g4',100)
+      g.playTone ('c4',100)
+      g.playTone ('d4',100)
+      sleep_ms (1000)
       if life < 0 :
         gameOver = True
 
