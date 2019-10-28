@@ -3,6 +3,7 @@
 ## Use common game module "gameESP.py" for ESP8266  or ESP32
 # by Billy Cheung  2019 10 26import gc
 import sys
+import gc
 gc.collect()
 # # print (gc.mem_free())
 import network
@@ -79,8 +80,7 @@ def tick():
         sleep_ms(1000)
     elif game['mode'] == MODE_MENU:
         # print('Menu')
-        game['life'] = 3
-        game['reset'] = True
+        pass
     elif game['mode'] == MODE_START:
         # print ("======================")
         game['refresh'] = True
@@ -89,6 +89,8 @@ def tick():
         game['mode'] = MODE_READY
         game['score'] = 0
         game['time']  = 0
+        if game['demo'] :
+            game['demoOn'] = True
     elif game['mode'] == MODE_READY:
         # print ("READY")
         game['refresh'] = False
@@ -130,6 +132,7 @@ def noCrash (x,y):
 def handleButtons():
   global SNAKE_SIZE
   g.getBtn()
+
   if game['mode'] == MODE_MENU :
     sleep_ms(10)
     if g.setVol() :
@@ -146,8 +149,10 @@ def handleButtons():
     elif g.justPressed(g.btnD):
         game['demo'] = not game['demo']
         g.playTone('e5', 100)
-    elif g.justReleased(g.btnA):
+    elif g.justReleased(g.btnA) or game['demoOn'] :
         game['mode'] = MODE_START
+        game['life'] = 3
+        game['reset'] = True
         g.playTone('f5', 100)
         if game['demo'] :
             g.display.fill(0)
@@ -162,11 +167,14 @@ def handleButtons():
   else :
     if game['demo'] :
         if g.justReleased (g.btnB):
+            game['demoOn'] = False
             game['mode'] = MODE_GAMEOVER
             g.playTone('g5', 100)
             g.playTone('f5', 100)
             g.playTone('e5', 100)
-            #get snake's head position
+
+        #get snake's head position
+
         h = snake['head']
         Hx = snake['x'][h]
         Hy = snake['y'][h]
@@ -425,7 +433,8 @@ game = {
     'time':    0,
     'refresh': True,
     'reset':   True,
-    'demo':    False
+    'demo':    False,
+    'demoOn' : False
 }
 
 snake = {
