@@ -175,13 +175,18 @@ class Pong:
 
     def game_loop(self):
       global gameOver, exitGame, scores
-
+      demoOn = False
       exitGame = False
       while not exitGame:
-        players = 1
+        if demoOn :
+            playsers = 0
+            demo = True
+        else :
+            players = 1
+            demo = False
+
         onePlayer = True
         usePaddle = False
-        demo = False
         gameOver = False
 
         #menu screen
@@ -212,15 +217,17 @@ class Pong:
                 exitGame = True
                 gameOver= True
                 break
-            elif g.justPressed(g.btnA) :
+            elif g.justPressed(g.btnA) or demoOn :
                 if players == 0 : # demo
                     onePlayer = False
                     demo = True
+                    demoOn = True
                     g.display.fill(0)
                     g.display.text('DEMO', 5, 0, 1)
                     g.display.text('B to Stop', 5, 30, 1)
                     g.display.show()
                     sleep_ms(1000)
+
                 elif players == 1 :
                     onePlayer = True
                     demo = False
@@ -247,6 +254,7 @@ class Pong:
           g.getBtn()
           if demo and g.justReleased(g.btnB) :
             gameOver = True
+            demoOn = False
 
           self.check_ball_hits_bat()
           self.check_ball_hits_wall()
