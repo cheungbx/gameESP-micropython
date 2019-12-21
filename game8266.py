@@ -40,7 +40,7 @@
 # D1/MOSI- D7 (=GPIO13=HMOSI)
 # RES    - D0 (=GPIO16)
 # DC     - D4 (=GPIO2)
-# CS     - D3 (=GPIO0)
+# CS     - Hard wired to ground.
 # Speaker
 # GPIO15   D8  Speaker
 # n.c.   - D6  (=GPIO12=HMISO)
@@ -49,9 +49,12 @@
 # these two pins together control whether buttons or paddle will be read
 # GPIO5    D1—— PinBtn
 # GPIO4    D2—— pinPaddle
-# To read buttons - Pin.Btn.On()  Pin.Paddle.off()
-# To read paddle  - Pin.Btn.Off()  Pin.Paddle.on()
-#
+# GPIO0    D3-- PinPaddle2
+
+# To read buttons - Pin.Btn.On()  Pin.Paddle.off() Pin.Paddle2.off()
+# To read paddle  - Pin.Btn.Off()  Pin.Paddle.on() Pin.Paddle2.off()
+# To read paddle2 - Pin.Btn.Off()  Pin.Paddle.off() Pin.Paddle2.on()
+
 # buttons are connected in series to create a voltage dividor
 # Each directional and A , B button when pressed will connect that point of
 # the voltage dividor to A0 to read the ADC value to determine which button is pressed.
@@ -73,6 +76,8 @@
 # Games with many moving graphics (e.g. space invdader, breakout) will run slower.
 #
 # Buttons are read through indvidial GPIO pins (pulled high).
+# Since all pins are used by buttons, only one paddle is available
+# no pins available for paddle2
 #
 # I2C OLED SSD1306
 # GPIO4   D2---  SDA OLED
@@ -93,8 +98,220 @@
 import utime
 from utime import sleep_ms,ticks_ms, ticks_us, ticks_diff
 from machine import Pin, SPI,I2C, PWM, ADC
-import ssd1306
+#import ssd1306
 from random import getrandbits, seed
+# MicroPython SSD1306 OLED driver, I2C and SPI interfaces
+
+from micropython import const
+import framebuf
+
+
+# register definitions
+SET_CONTRAST        = const(0x81)
+SET_ENTIRE_ON       = const(0xa4)
+SET_NORM_INV        = const(0xa6)
+SET_DISP            = const(0xae)
+SET_MEM_ADDR        = const(0x20)
+SET_COL_ADDR        = const(0x21)
+SET_PAGE_ADDR       = const(0x22)
+SET_DISP_START_LINE = const(0x40)
+SET_SEG_REMAP       = const(0xa0)
+SET_MUX_RATIO       = const(0xa8)
+SET_COM_OUT_DIR     = const(0xc0)
+SET_DISP_OFFSET     = const(0xd3)
+SET_COM_PIN_CFG     = const(0xda)
+SET_DISP_CLK_DIV    = const(0xd5)
+SET_PRECHARGE       = const(0xd9)
+SET_VCOM_DESEL      = const(0xdb)
+SET_CHARGE_PUMP     = const(0x8d)
+
+# Subclassing FrameBuffer provides support for graphics primitives
+# http://docs.micropython.org/en/latest/pyboard/library/framebuf.html
+# modified for GAMEESP to dispable use of CS.
+# CS pin will be reused as the 2nd paddel controller pins
+#
+class SSD1306(framebuf.FrameBuffer):
+    def __init__(self, width, height, external_vcc):
+        self.width = width
+        self.height = height
+        self.external_vcc = external_vcc
+        self.pages = self.height // 8
+        self.buffer = bytearray(self.pages * self.width)
+        super().__init__(self.buffer, self.width, self.height, framebuf.MONO_VLSB)
+        self.init_display()
+
+    def init_display(self):
+        for cmd in (
+            SET_DISP | 0x00, # off
+            # address setting
+            SET_MEM_ADDR, 0x00, # horizontal
+            # resolution and layout
+            SET_DISP_START_LINE | 0x00,
+            SET_SEG_REMAP | 0x01, # column addr 127 mapped to SEG0
+            SET_MUX_RATIO, self.height - 1,
+            SET_COM_OUT_DIR | 0x08, # scan from COM[N] to COM0
+            SET_DISP_OFFSET, 0x00,
+            SET_COM_PIN_CFG, 0x02 if self.height == 32 else 0x12,
+            # timing and driving scheme
+            SET_DISP_CLK_DIV, 0x80,
+            SET_PRECHARGE, 0x22 if self.external_vcc else 0xf1,
+            SET_VCOM_DESEL, 0x30, # 0.83*Vcc
+            # display
+            SET_CONTRAST, 0xff, # maximum
+            SET_ENTIRE_ON, # output follows RAM contents
+            SET_NORM_INV, # not inverted
+            # charge pump
+            SET_CHARGE_PUMP, 0x10 if self.external_vcc else 0x14,
+            SET_DISP | 0x01): # on
+            self.write_cmd(cmd)
+        self.fill(0)
+        self.show()
+
+    def poweroff(self):
+        self.write_cmd(SET_DISP | 0x00)
+
+    def poweron(self):
+        self.write_cmd(SET_DISP | 0x01)
+
+    def contrast(self, contrast):
+        self.write_cmd(SET_CONTRAST)
+        self.write_cmd(contrast)
+
+    def invert(self, invert):
+        self.write_cmd(SET_NORM_INV | (invert & 1))
+
+    def show(self):
+        x0 = 0
+        x1 = self.width - 1
+        if self.width == 64:
+            # displays with width of 64 pixels are shifted by 32
+            x0 += 32
+            x1 += 32
+        self.write_cmd(SET_COL_ADDR)
+        self.write_cmd(x0)
+        self.write_cmd(x1)
+        self.write_cmd(SET_PAGE_ADDR)
+        self.write_cmd(0)
+        self.write_cmd(self.pages - 1)
+        self.write_data(self.buffer)
+
+
+class SSD1306_I2C(SSD1306):
+    def __init__(self, width, height, i2c, addr=0x3c, external_vcc=False):
+        self.i2c = i2c
+        self.addr = addr
+        self.temp = bytearray(2)
+        self.write_list = [b'\x40', None] # Co=0, D/C#=1
+        super().__init__(width, height, external_vcc)
+
+    def write_cmd(self, cmd):
+        self.temp[0] = 0x80 # Co=1, D/C#=0
+        self.temp[1] = cmd
+        self.i2c.writeto(self.addr, self.temp)
+
+    def write_data(self, buf):
+        self.write_list[1] = buf
+        self.i2c.writevto(self.addr, self.write_list)
+
+
+class SSD1306_SPI(SSD1306):
+#    def __init__(self, width, height, spi, dc, res, cs external_vcc=False):
+    def __init__(self, width, height, spi, dc, res, external_vcc=False):
+
+        self.rate = 10 * 1024 * 1024
+        dc.init(dc.OUT, value=0)
+        res.init(res.OUT, value=0)
+#        cs.init(cs.OUT, value=1)
+        self.spi = spi
+        self.dc = dc
+        self.res = res
+#        self.cs = cs
+        import time
+        self.res(1)
+        time.sleep_ms(1)
+        self.res(0)
+        time.sleep_ms(10)
+        self.res(1)
+        super().__init__(width, height, external_vcc)
+
+    def write_cmd(self, cmd):
+        self.spi.init(baudrate=self.rate, polarity=0, phase=0)
+#        self.cs(1)
+        self.dc(0)
+#        self.cs(0)
+        self.spi.write(bytearray([cmd]))
+#        self.cs(1)
+
+    def write_data(self, buf):
+        self.spi.init(baudrate=self.rate, polarity=0, phase=0)
+#        self.cs(1)
+        self.dc(1)
+#        self.cs(0)
+        self.spi.write(buf)
+#        self.cs(1)
+
+    def block(self, x0, y0, x1, y1, data):
+          """Write a block of data to display.
+
+          Args:
+              x0 (int):  Starting X position.
+              y0 (int):  Starting Y position.
+              x1 (int):  Ending X position.
+              y1 (int):  Ending Y position.
+              data (bytes): Data buffer to write.
+          """
+          self.write_cmd(self.SET_COLUMN, x0, x1)
+          self.write_cmd(self.SET_ROW, y0, y1)
+          self.write_cmd(self.WRITE_RAM)
+          self.write_data(data)
+
+    def draw_sprite(self, buf, x, y, w, h):
+        """Draw a sprite (optimized for horizontal drawing).
+
+        Args:
+            buf (bytearray): Buffer to draw.
+            x (int): Starting X position.
+            y (int): Starting Y position.
+            w (int): Width of drawing.
+            h (int): Height of drawing.
+        """
+        x2 = x + w - 1
+        y2 = y + h - 1
+        if self.is_off_grid(x, y, x2, y2):
+            return
+        self.block(x, y, x2, y2, buf)
+
+    def draw_image(self, path, x=0, y=0, w=128, h=128):
+        """Draw image from flash.
+
+        Args:
+            path (string): Image file path.
+            x (int): X coordinate of image left.  Default is 0.
+            y (int): Y coordinate of image top.  Default is 0.
+            w (int): Width of image.  Default is 128.
+            h (int): Height of image.  Default is 128.
+        """
+        x2 = x + w - 1
+        y2 = y + h - 1
+        if self.is_off_grid(x, y, x2, y2):
+            return
+        with open(path, "rb") as f:
+            chunk_height = 1024 // w
+            chunk_count, remainder = divmod(h, chunk_height)
+            chunk_size = chunk_height * w * 2
+            chunk_y = y
+            if chunk_count:
+                for c in range(0, chunk_count):
+                    buf = f.read(chunk_size)
+                    self.block(x, chunk_y,
+                               x2, chunk_y + chunk_height - 1,
+                               buf)
+                    chunk_y += chunk_height
+            if remainder:
+                buf = f.read(remainder * w * 2)
+                self.block(x, chunk_y,
+                           x2, chunk_y + remainder - 1,
+                           buf)
 
 class gameESP():
     max_vol = 6
@@ -130,6 +347,7 @@ class gameESP():
     def __init__(self):
         # True =  SPI display, False = I2C display
         self.ESP32 = False
+        self.paddle2 = False
         self.useSPI = True
         self.timer = 0
         self.vol = int(self.max_vol/2) + 1
@@ -151,14 +369,18 @@ class gameESP():
             # configure oled display SPI SSD1306
             self.hspi = SPI(1, baudrate=8000000, polarity=0, phase=0)
             #DC, RES, CS
-            self.display = ssd1306.SSD1306_SPI(128, 64, self.hspi, Pin(2), Pin(16), Pin(0))
+#            self.display = SSD1306_SPI(128, 64, self.hspi, Pin(2), Pin(16), Pin(0))
+            self.display = SSD1306_SPI(128, 64, self.hspi, Pin(2), Pin(16))
             self.pinBtn = Pin(5, Pin.OUT)
             self.pinPaddle = Pin(4, Pin.OUT)
+            self.paddle2 = True
+            self.pinPaddle2 = Pin(0, Pin.OUT)
+
         else :  # I2C display
 
             # configure oled display I2C SSD1306
             self.i2c = I2C(-1, Pin(5), Pin(4))   # SCL, SDA
-            self.display = ssd1306.SSD1306_I2C(128, 64, self.i2c)
+            self.display = SSD1306_I2C(128, 64, self.i2c)
             self.PinBtnL = Pin(12, Pin.IN, Pin.PULL_UP)
             self.PinBtnR = Pin(13, Pin.IN, Pin.PULL_UP)
             self.PinBtnU = Pin(14, Pin.IN, Pin.PULL_UP)
@@ -172,6 +394,15 @@ class gameESP():
     def getPaddle (self) :
       if self.useSPI :
           self.pinPaddle.on()
+          self.pinPaddle2.off()
+          self.pinBtn.off()
+          sleep_ms(1)
+      return self.adc.read()
+
+    def getPaddle2 (self) :
+      if self.useSPI :
+          self.pinPaddle2.on()
+          self.pinPaddle.off()
           self.pinBtn.off()
           sleep_ms(1)
       return self.adc.read()
@@ -191,6 +422,7 @@ class gameESP():
       if self.useSPI :
           # SPI board, record each key pressed based on the  ADC value
           self.pinPaddle.off()
+          self.pinPaddle2.off()
           self.pinBtn.on()
 
           a0=self.adc.read()
@@ -268,7 +500,7 @@ class gameESP():
         sleep_ms(rest_duration)
 
     def random (self, x, y) :
-        return  getrandbits(10) % (y+1) + x
+        return  getrandbits(20) % (y-x+1) + x
 
     def display_and_wait(self) :
         self.display.show()

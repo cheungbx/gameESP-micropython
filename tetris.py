@@ -29,7 +29,7 @@ from utime import sleep_ms
 import network
 from math import sqrt
 # all dislplay, buttons, paddle, sound logics are in gameESP.mpy module
-from gameESP import gameESP, Rect
+from gameESP import *
 g=gameESP()
 
 g.frameRate = 30
@@ -302,7 +302,7 @@ while not exitGame:
            continue
 
     while True:
-        mov_delay = 100
+        mov_delay = 150
         move_dir  = 'down'
         g.getBtn()
         if game == 'paused':
@@ -354,7 +354,6 @@ while not exitGame:
 
 
             draw_shape()
-            sleep_ms(mov_delay)
             g.display.show()
 
             for row_no in range (height - sqrsize + top_y, 0, -sqrsize):

@@ -12,7 +12,7 @@ print (gc.mem_free())
 from machine import Pin, ADC
 from utime import sleep_ms, ticks_ms, ticks_diff
 module_name = ""
-tone_dur = 20
+tone_dur = 10
 
 def do_menu (g) :
   global module_name, vol, max_vol
@@ -37,6 +37,22 @@ def do_menu (g) :
   tot_rows = const(5)
   screen_pos = 0
   file_pos = 0
+
+
+  g.display.fill(0)
+  g.display.text('Micropython Menu', 0, 0, 1)
+  g.display.text('U/D to Select', 0, 20, 1)
+  g.display.text('A to Launch', 0, 30, 1)
+  g.display.text('B+L to exit', 0, 40, 1)
+  g.display.text('Press U to start', 0, 50, 1)
+  g.display.show()
+  sleep_ms(1000)
+
+  # wait till all buttons are released
+  g.getBtn()
+  while not g.Btns :
+    sleep_ms(10)
+    g.getBtn()
 
   launched = False
   while not launched :
@@ -95,11 +111,11 @@ def do_menu (g) :
         module_name = module_names[file_pos + screen_pos]
         return True
 
-    if g.justReleased(g.btnL):
+    if g.pressed(g.btnB) and g.justPressed(g.btnL):
         g.playTone('d5', tone_dur)
         launched = True
         g.display.fill(0)
-        g.display.text("exited ", 5, 24, 1)
+        g.display.text("Menu exited", 5, 24, 1)
         g.display.show()
         return False
     g.display.show()
@@ -107,7 +123,7 @@ def do_menu (g) :
 
 
 go_on = True
-from gameESP import gameESP
+from gameESP import *
 g=gameESP()
 ESP32 = g.ESP32
 
@@ -125,5 +141,5 @@ while go_on :
     gc.collect()
 
   if ESP32 :
-      from gameESP import gameESP
+      from gameESP import *
       g=gameESP()

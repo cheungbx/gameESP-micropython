@@ -12,10 +12,11 @@ from utime import sleep_ms
 import network
 from math import sqrt
 # all dislplay, buttons, paddle, sound logics are in gameESP.mpy module
-from gameESP import gameESP, Rect
+from gameESP import *
 g=gameESP()
 
 scores = [0,0]
+
 maxScore = 15
 gameOver = False
 exitGame = False
@@ -28,15 +29,25 @@ class bat(Rect):
     self.down_key = down_key
     super().__init__(*args, **kwargs)
 
-  def move_bat(self, board_height, bat_HEIGHT, ballY):
+  def move_bat(self, board_height, bat_HEIGHT, balls):
     g.getBtn()
 
     if self.up_key == 0  : # use AI
-      self.y = max(min(ballY - 10 +  g.random(0,15), board_height-pong.bat_HEIGHT),0)
+      ballXdiff = 40
+      ballY = -1
+      for ball in balls :
+          if abs(ball.x - self.x) < ballXdiff :
+              ballXdiff = abs(ball.x - self.x)
+              ballY = ball.y
+      if ballY >= 0 :
+          self.y = max(min(ballY - pong.bat_HEIGHT//2 +  g.random(0,pong.bat_HEIGHT//2+1), board_height-pong.bat_HEIGHT),0)
 
     elif self.up_key == -1 : # use Paddle
       self.y = int (g.getPaddle() / (1024 / (board_height-pong.bat_HEIGHT)))
+      self.y = int (g.getPaddle() / (1024 / (board_height-pong.bat_HEIGHT)))
 
+    elif self.up_key == -2 : # use Paddle 2
+      self.y = int (g.getPaddle2() / (1024 / (board_height-pong.bat_HEIGHT)))
     else :
       if g.pressed(self.up_key):
           self.y = max(self.y - self.velocity,0)
@@ -69,7 +80,8 @@ class Pong:
     COLOUR = 1
     scores = [0,0]
     maxScore = 15
-
+    maxballs = 2
+    ballschance = 50
 
     def init (self, onePlayer, demo, usePaddle):
         # Setup the screen
@@ -81,33 +93,34 @@ class Pong:
 
         if demo :
           self.bats.append(bat(  # The left bat, AI
-            self.bat_VELOCITY,
-            0,
-            0,
-            0,
-            int(self.HEIGHT / 2 - self.bat_HEIGHT / 2),
-            self.bat_WIDTH,
-            self.bat_HEIGHT))
+              self.bat_VELOCITY,
+              0,
+              0,
+              0,
+              int(self.HEIGHT / 2 - self.bat_HEIGHT / 2),
+              self.bat_WIDTH,
+              self.bat_HEIGHT))
         elif usePaddle :
           self.bats.append(bat(  # The left bat, use Paddle
-            self.bat_VELOCITY,
-            -1,
-            -1,
-            0,
-            int(self.HEIGHT / 2 - self.bat_HEIGHT / 2),
-            self.bat_WIDTH,
-            self.bat_HEIGHT))
+              self.bat_VELOCITY,
+              -1,
+              -1,
+              0,
+              int(self.HEIGHT / 2 - self.bat_HEIGHT / 2),
+              self.bat_WIDTH,
+              self.bat_HEIGHT))
         else :
 
           self.bats.append(bat(  # The left bat, button controlled
-            self.bat_VELOCITY,
-            g.btnU,
-            g.btnD,
-            0,
-            int(self.HEIGHT / 2 - self.bat_HEIGHT / 2),
-            self.bat_WIDTH,
-            self.bat_HEIGHT))
+              self.bat_VELOCITY,
+              g.btnU,
+              g.btnD,
+              0,
+              int(self.HEIGHT / 2 - self.bat_HEIGHT / 2),
+              self.bat_WIDTH,
+              self.bat_HEIGHT))
 
+        # set up control method for left Bat
         if demo or onePlayer:
           self.bats.append(bat(  # The right bat, AI
               self.bat_VELOCITY,
@@ -118,8 +131,17 @@ class Pong:
               self.bat_WIDTH,
               self.bat_HEIGHT
               ))
-        else :
-           self.bats.append(bat(  # The right bat, button controlled
+        elif usePaddle and g.paddle2 :  # only use paddle2 if its present on the boards
+          self.bats.append(bat(      # The right bat, use Paddle
+              self.bat_VELOCITY,
+              -2,
+              -2,
+              self.WIDTH - self.bat_WIDTH-1,
+              int(self.HEIGHT / 2 - self.bat_HEIGHT / 2),
+              self.bat_WIDTH,
+              self.bat_HEIGHT))
+        else :  # use buttons for the right bat
+          self.bats.append(bat(  # The right bat, button controlled
               self.bat_VELOCITY,
               g.btnB,
               g.btnA,
@@ -141,11 +163,16 @@ class Pong:
       global gameOver
       global scores
       scores[player] += 1
-      ball.velocity = - ball.velocity
-      ball.angle = g.random(0,3) - 2
-      ball.x = int(self.WIDTH / 2 - self.BALL_WIDTH / 2)
-      ball.y = int(self.HEIGHT / 2 - self.BALL_WIDTH / 2)
       g.playTone ('g4', 100)
+
+      if len (self.balls) > 1 :
+          self.balls.remove(ball)
+      else :
+          ball.velocity = - ball.velocity
+          ball.angle = g.random(0,3) - 2
+          ball.x = int(self.WIDTH / 2 - self.BALL_WIDTH / 2)
+          ball.y = int(self.HEIGHT / 2 - self.BALL_WIDTH / 2)
+
 
       if scores[player] >= maxScore :
         gameOver = True
@@ -195,7 +222,7 @@ class Pong:
             g.display.text('Pong', 0, 0, 1)
             g.display.rect(90,0, g.max_vol*4+2,6,1)
             g.display.fill_rect(91,1, g.vol * 4,4,1)
-            g.display.text('A Start  L Quit', 0, 10,  1)
+            g.display.text('A Start  B+L Quit', 0, 10,  1)
             if usePaddle :
                 g.display.text('U Paddle', 0,20,  1)
             else :
@@ -213,7 +240,7 @@ class Pong:
             g.getBtn()
             if g.setVol() :
                 pass
-            elif g.justReleased(g.btnL) :
+            elif g.pressed (g.btnB) and g.justPressed(g.btnL) :
                 exitGame = True
                 gameOver= True
                 break
@@ -224,7 +251,7 @@ class Pong:
                     demoOn = True
                     g.display.fill(0)
                     g.display.text('DEMO', 5, 0, 1)
-                    g.display.text('B to Stop', 5, 30, 1)
+                    g.display.text('B+L to Stop', 5, 30, 1)
                     g.display.show()
                     sleep_ms(1000)
 
@@ -252,9 +279,10 @@ class Pong:
 
         while not gameOver:
           g.getBtn()
-          if demo and g.justReleased(g.btnB) :
-            gameOver = True
-            demoOn = False
+          if g.pressed (g.btnB) and g.justReleased(g.btnL) :
+              gameOver = True
+              demoOn = False
+
 
           self.check_ball_hits_bat()
           self.check_ball_hits_wall()
@@ -263,7 +291,7 @@ class Pong:
           g.display.fill(0)
 
           for bat in self.bats:
-            bat.move_bat(self.HEIGHT, self.bat_HEIGHT, self.balls[0].y)
+            bat.move_bat(self.HEIGHT, self.bat_HEIGHT,self.balls)
             g.display.fill_rect(bat.x,bat.y,self.bat_WIDTH, self.bat_HEIGHT, self.COLOUR)
 
           for ball in self.balls:
@@ -284,6 +312,13 @@ class Pong:
             g.playTone ('g4', 400)
             g.playTone ('b4', 200)
             g.playTone ('c5', 400)
+          elif len(self.balls) < self.maxballs and g.random(0,10000) < self.ballschance :
+                  self.balls.append(Ball(
+                      self.BALL_VELOCITY,
+                      int(self.WIDTH / 2 - self.BALL_WIDTH / 2),
+                      int(self.HEIGHT / 2 - self.BALL_WIDTH / 2),
+                      self.BALL_WIDTH,
+                      self.BALL_WIDTH))
 
           g.display_and_wait()
 

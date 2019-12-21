@@ -1,6 +1,14 @@
 # gameESP.py
 # for ESP32
-# common micropython module for ESP32 game board designed by Billy Cheung (c) 2019 08 31
+#
+# gameESP-micropython
+# Simple MicroPython game modules and sample games for ESP8266 and ESP32
+#
+# gameESP.py for esp8266 or esp32
+# if you are using esp8266 boards, copy game8266.py as gameESP.py or use mpy-cross to compile to gameESP.mpy
+# if you are using esp32 boards, copy game32.py as gameESP.py or use mpy-cross to compile to gameESP.mpy
+#
+# common micropython module for ESP8266 game board designed by Billy Cheung (c) 2019 08 31
 # --usage--
 # Using this common micropython game module, you can write micropython games to run
 # either on the SPI OLED or I2C OLED without chaning a line of code.
@@ -8,8 +16,8 @@
 #        self.useSPI = True  # for SPI display , with buttons read through ADC
 #        self.useSPI = False  # for I2C display, and individual hard buttons
 #
-# Note:  esp32 without the PSRAM only have 100K of RAM and is very bad at running .py micropython source code files
-# with its very limited CPU onboard memory of 100K
+# Note:  esp8266 is very bad at running .py micropython source code files
+# with its very limited CPU onboard memory of 32K
 # so to run any program with > 300 lines of micropython codes combined (including all modules),
 # you need to convert source files into byte code first to avoid running out of memory.
 # Install a version of the  mpy-cross micropython pre-compiler that can run in your system (available from github).
@@ -20,70 +28,76 @@
 # from the gameESP class module.
 # Add this line to your micropython game source code (examples attached, e.g. invader.py)
 #       from gameESP import gameESP, Rect
-#       g=GameESP()
+#       g=gameESP()
 #
 #
+#
+#==================================================================================
+# ESP32 Game board
+# -----------------
+# The pin layout is exactly the same as that of the Odroid-Go
+# so this library can be used on the micropython firmware of the Odroid-Go
+#
+#------------------------
+# ESP32 OLED SPI SSD1306
+# ==============
+# VCC     -  3.3V
+# GND     -  GND
+# D0/SCK  -  IO18-VSPI-SCK
+# D1/MOSI -  IO23-VSPI-MOSI
+# RES     -  IO4 for ESP32
+# DC      -  IO21
+# CS      -  IO5-VSPI CS0
+# LED/BLK -  IO14
+#
+# MISO    -  IO19-VSPI-MISO (not required for OLED)
+#
+#
+# TF Card Odroid-go (optional)
+# ================
+# CS -    IO22 VSPI CS1
+# MOSI -  IO23 VSPI MOSI
+# MISO -  IO19 VSPI SCK
+# SCK -   IO18 VSPI MISO
+#
+# ESP32 OLED I2C SSD1306
+# ================
+# VCC  -  3.3V
+# GND   - GND
+# SCL -   IO 22
+# SDA     IO 21
+
+# Audio
+# ======
+# Speaker- - GND
+# Speaker+ - 10K VR- IO26
+
+# Paddle (10K VR)
+# ======
+# left   GND
+# middle VN/IO39
+# right  VCC
+
+
+# D-PAD Buttons
+# =============
+# tie one end to 3V3
+# UP        IO35-10K-GND
+# Down-10K  IO35
+# Left      IO34-10K-GND
+# Right-10K IO34
+
+# Other Buttons
+# ============
+# tie one end to GND
+# Menu      IO13
+# Volume    IO00-10K-3v3
+# Select    IO27
+# Start     IO39(VN)-10K-3v3
+# B         IO33
+# A         IO32
 #
 #-----------------------------------------
-'''
-ESP32 Game board
-
-OLED SPI
-========
-VCC     -  3V3
-GND     -  GND
-D0/SCK  -  IO18-VSPI-SCK
-D1/MOSI -  IO23-VSPI-MOSI
-RES     -  IO4 for ESP32
-DC      -  IO21
-CS      -  IO5-VSPI CS0
-LED/BLK -  IO14
-
-MISO    -  IO19-VSPI-MISO (not required for OLED)
-
-TF Card
-================
-CS -      IO13
-MOSI -    IO15
-SCK -     IO14
-MISO -    IO2
-
-Power
-======
-GND-100K-IO36(VP)-100K-VBat(3.7V)
-GND-0.1uF-IO36
-
-Audio
-======
-Speaker- - GND
-Speaker+ - 10K VR- IO26
-
-Paddle
-======
-GND
-VN/IO39
-4.7K-VCC
-
-
-D-PAD Buttons
-=============
-tie one end to 3V3
-UP        IO35-10K-GND
-Down-10K  IO35
-Left      IO34-10K-GND
-Right-10K IO34
-
-Other Buttons
-============
-tie one end to GND
-Menu      IO13
-Volume    IO00-10K-3v3
-Select    IO27
-Start     IO39(VN)-10K-3v3
-B         IO33
-A         IO32
-
-'''
 import utime
 from utime import sleep_ms,ticks_ms, ticks_us, ticks_diff
 from machine import Pin, SPI,I2C, PWM, ADC
@@ -270,6 +284,7 @@ class gameESP():
     def __init__(self):
         # True =  SPI display, False = I2C display
         self.ESP32 = True
+        self.paddle2 = False
         self.useSPI = True
         self.timer = 0
         self.vol = int(self.max_vol/2) + 1
@@ -375,7 +390,7 @@ class gameESP():
         sleep_ms(rest_duration)
 
     def random (self, x, y) :
-        return  getrandbits(10) % (y+1) + x
+        return  getrandbits(20) % (y-x+1) + x
 
     def display_and_wait(self) :
         self.display.show()

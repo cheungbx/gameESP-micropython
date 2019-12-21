@@ -14,7 +14,7 @@ from machine import Pin, SPI, PWM, ADC
 from math import sqrt
 import gameESP
 # all dislplay, buttons, paddle, sound logics are in gameESP.mpy module
-from gameESP import gameESP, Rect
+from gameESP import *
 g=gameESP()
 paddle_width = 22
 frameRate = 30
