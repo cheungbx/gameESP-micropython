@@ -46,7 +46,7 @@
 # D1/MOSI- D7 (=GPIO13=HMOSI)
 # RES    - D0 (=GPIO16)
 # DC     - D4 (=GPIO2)
-# CS     - D3 (=GPIO0)
+# CS     - Hard wired to ground.
 # Speaker
 # GPIO15   D8  Speaker
 # n.c.   - D6  (=GPIO12=HMISO)
@@ -55,8 +55,11 @@
 # these two pins together control whether buttons or paddle will be read
 # GPIO5    D1—— PinBtn
 # GPIO4    D2—— pinPaddle
-# To read buttons - Pin.Btn.On()  Pin.Paddle.off()
-# To read paddle  - Pin.Btn.Off()  Pin.Paddle.on()
+# GPIO0    D3-- PinPaddle2
+
+# To read buttons - Pin.Btn.On()  Pin.Paddle.off() Pin.Paddle2.off()
+# To read paddle  - Pin.Btn.Off()  Pin.Paddle.on() Pin.Paddle2.off()
+# To read paddle2 - Pin.Btn.Off()  Pin.Paddle.off() Pin.Paddle2.on()
 #
 # buttons are connected in series to create a voltage dividor
 # Each directional and A , B button when pressed will connect that point of
