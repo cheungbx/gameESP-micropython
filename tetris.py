@@ -263,7 +263,7 @@ while not exitGame:
     g.display.text('Tetris', 0, 0, 1)
     g.display.rect(90,0, g.max_vol*4+2,6,1)
     g.display.fill_rect(91,1, g.vol * 4,4,1)
-    g.display.text('A Start  L Quit', 0, 10,  1)
+    g.display.text('A Start B+L Quit', 0, 10,  1)
     if demo :
         g.display.text('D AI-Player', 0,20, 1)
     else :
