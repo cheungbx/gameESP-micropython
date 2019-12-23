@@ -97,7 +97,7 @@
 
 import utime
 from utime import sleep_ms,ticks_ms, ticks_us, ticks_diff
-from machine import Pin, SPI,I2C, PWM, ADC
+from machine import Pin, SPI, I2C, PWM, ADC, Timer
 #import ssd1306
 from random import getrandbits, seed
 # MicroPython SSD1306 OLED driver, I2C and SPI interfaces
@@ -317,6 +317,17 @@ class gameESP():
     max_vol = 6
     duty={0:0,1:1,2:3,3:5,4:10,5:70,6:512}
     tones = {
+        ' ': 0,   # silence note
+        'c3': 131,
+        'd3': 147,
+        'e3': 165,
+        'f3': 175,
+        'f#3': 185,
+        'g3': 196,
+        'g#3': 208,
+        'a3': 220,
+        "a#3": 233,
+        'b3': 247,
         'c4': 262,
         'd4': 294,
         'e4': 330,
@@ -338,18 +349,19 @@ class gameESP():
         'g#5': 831,
         'a5': 880,
         'b5': 988,
+# note the following can only be played by ESP32, as ESP8266 can play up to 1000Hz only.
         'c6': 1047,
         'c#6': 1109,
-        'd6': 1175,
-        ' ': 0
+        'd6': 1175
     }
+
 
     def __init__(self):
         # True =  SPI display, False = I2C display
         self.ESP32 = False
         self.paddle2 = False
         self.useSPI = True
-        self.timer = 0
+        self.displayTimer = ticks_ms()
         self.vol = int(self.max_vol/2) + 1
         seed(ticks_us())
         self.btnU = 1 << 1
@@ -361,10 +373,24 @@ class gameESP():
         self.frameRate = 30
         self.screenW = 128
         self.screenH = 64
+        self.maxBgm = 1
+        self.bgm = 1
+        self.songIndex = 0
+        self.songStart = -1
+        self.songEnd   = -1
+        self.songLoop  = -3
+        self.silence  = 0
+        self.songSpeed = 1
+        self.timeunit = 1
+        self.notes = False
+        self.songBuf = []
         self.Btns = 0
         self.lastBtns = 0
         self.adc = ADC(0)
         self.PinBuzzer = Pin(15, Pin.OUT)
+        self.beeper = PWM(self.PinBuzzer, 500, duty=0)
+        self.beeper2 = PWM(self.PinBuzzer, 500, duty=0)
+        self.timerInitialized = False
         if self.useSPI :
             # configure oled display SPI SSD1306
             self.hspi = SPI(1, baudrate=8000000, polarity=0, phase=0)
@@ -389,7 +415,11 @@ class gameESP():
             self.PinBtnB = Pin(16, Pin.IN) #GPIO 16 always pull down cannot pull up
 
     def deinit(self) :
-        pass
+      self.beeper.deinit()
+      self.beeper2.deinit()
+      self.songIndex = 0
+      if self.timerInitialized :
+          self.timer.deinit()
 
     def getPaddle (self) :
       if self.useSPI :
@@ -487,6 +517,18 @@ class gameESP():
 
         return False
 
+    def setFrameRate(self) :
+
+        if self.justPressed(self.btnR) :
+            self.frameRate = self.frameRate + 5 if self.frameRate < 120 else 5
+            self.playTone('e4', 100)
+            return True
+        elif self.pressed(self.btnB) and self.justPressed(self.btnR) :
+            self.frameRate = self.frameRate - 5 if self.frameRate > 5 else 120
+            self.playTone('f4', 100)
+            return True
+        return False
+
     def playTone(self, tone, tone_duration, rest_duration=0):
         beeper = PWM(self.PinBuzzer, freq=self.tones[tone], duty=self.duty[self.vol])
         sleep_ms(tone_duration)
@@ -499,16 +541,50 @@ class gameESP():
         beeper.deinit()
         sleep_ms(rest_duration)
 
+
+    def handleInterrupt(self,timer):
+        self.beeper2.deinit() # note has been played logn enough, now stop sound
+
+        if self.songBuf[self.songIndex] == self.songLoop :
+            self.songIndex = 3 # repeat from first note
+
+        if self.songBuf[self.songIndex] != self.songEnd :
+            if self.songBuf[self.songIndex] == 0 :
+                self.beeper2 = PWM(self.PinBuzzer, 100,0)
+            elif self.notes :
+                self.beeper2 = PWM(self.PinBuzzer, self.tones[self.songBuf[self.songIndex]], self.duty[self.vol])
+            else :
+                self.beeper2 = PWM(self.PinBuzzer, self.songBuf[self.songIndex], self.duty[self.vol])
+            self.timer.init(period=int(self.songBuf[self.songIndex+1] * self.timeunit * self.songSpeed) , mode=Timer.ONE_SHOT, callback=self.handleInterrupt)
+            self.songIndex +=2
+
+    def startSong(self, songBuf=None):
+        if self.bgm :
+            if songBuf != None :
+                self.songBuf = songBuf
+            if self.songBuf[0] != self.songStart :
+                print ("Cannot start Song, Invalid songBuf")
+                return False
+            self.notes = self.songBuf[1]
+            self.timeunit = self.songBuf[2]
+            self.songIndex = 3
+            if not self.timerInitialized :
+                self.timerInitialized = True
+                self.timer = Timer(1)
+            self.timer.init(period=100 , mode=Timer.ONE_SHOT, callback=self.handleInterrupt)
+
+    def stopSong(self):
+        self.songIndex = 0
+
     def random (self, x, y) :
         return  getrandbits(20) % (y-x+1) + x
 
     def display_and_wait(self) :
         self.display.show()
-        timer_dif = int(1000/self.frameRate) - ticks_diff(ticks_ms(), self.timer)
+        timer_dif = int(1000/self.frameRate) - ticks_diff(ticks_ms(), self.displayTimer)
         if timer_dif > 0 :
             sleep_ms(timer_dif)
-        self.timer=ticks_ms()
-
+        self.displayTimer=ticks_ms()
 
 class Rect (object):
     def __init__(self, x, y, w, h):

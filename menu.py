@@ -1,5 +1,5 @@
 # menu.py.
-# startup menu and launcher for other python programs
+# startup menu and luancher for other python programs
 #
 # Use common game module "gameESP.py" for ESP8266  or ESP32
 # by Billy Cheung  2019 10 26
@@ -42,7 +42,7 @@ def do_menu (g) :
   g.display.fill(0)
   g.display.text('Micropython Menu', 0, 0, 1)
   g.display.text('U/D to Select', 0, 20, 1)
-  g.display.text('A to Launch', 0, 30, 1)
+  g.display.text('A to Luanch', 0, 30, 1)
   g.display.text('B+L to exit', 0, 40, 1)
   g.display.text('Press U to start', 0, 50, 1)
   g.display.show()
@@ -54,8 +54,8 @@ def do_menu (g) :
     sleep_ms(10)
     g.getBtn()
 
-  launched = False
-  while not launched :
+  luanched = False
+  while not luanched :
     gc.collect()
     g.display.fill(0)
     g.display.text('M:{}'.format(gc.mem_free()), 0, 0, 1)
@@ -104,7 +104,7 @@ def do_menu (g) :
     if g.justReleased(g.btnA):
         g.playTone('c5', tone_dur)
         g.display.fill(0)
-        g.display.text("launching " , 5, 20, 1)
+        g.display.text("luanching " , 5, 20, 1)
         g.display.text(module_names[file_pos + screen_pos], 5, 40, 1)
         g.display.show()
         sleep_ms(1000)
@@ -113,7 +113,7 @@ def do_menu (g) :
 
     if g.pressed(g.btnB) and g.justPressed(g.btnL):
         g.playTone('d5', tone_dur)
-        launched = True
+        luanched = True
         g.display.fill(0)
         g.display.text("Menu exited", 5, 24, 1)
         g.display.show()

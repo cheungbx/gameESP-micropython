@@ -16,7 +16,44 @@ from math import sqrt
 from gameESP import *
 g=gameESP()
 
+# songbuf = [ g.songStart, NotesorFreq , timeunit,
+#             freq1, duration1, freq2, duration2,
+#             g.songLoop  or g.songEnd]
+# Notes or Freq : False=song coded frequencies (Hz), True=song coded in notes, e.g. 'f4' 'f#4')
+# timeunit = value to multiple durations with that number of milli-seconds. Default 1 milli-second.
+# freq1 can be replaced with note, e.g. [g.songStart, 'c4', 200,'d4', 200,'e4',300,'f4', 300,'f#4': 300,'g4',300,g.songEnd]
+# freq1 = 0 for silence notes
+# duration1 is multipled with tempo to arrive at a duration for the  note in millseconds
+
 g.frameRate = 30
+g.bgm = 1
+g.maxBgm = 3
+bgmBuf= [
+    [g.songStart, False, 1, g.songEnd],
+    # Empire Strikes Back
+    [ g.songStart,True, 100, 0, 4,
+    'g3',1,0,1,'g3',1,0,1,'g3',1,0,1,'c4',8,'g4',8,0,4,'f4',2,'e4',2,'d4',2,'c5',8,'g4',8, 0,4, 'f4',2,'e4',2,'d4',2,'c5',8,'g4',8,0,4,'f4',2,'e4',2,'f4',2,'d4',8,0,8,
+    'g3',1,0,1,'g3',1,0,1,'g3',1,0,1,'c4',8,'g4',8,0,4,'f4',2,'e4',2,'d4',2,'c5',8,'g4',8, 0,4, 'f4',2,'e4',2,'d4',2,'c5',8,'g4',8,0,4,'f4',2,'e4',2,'f4',2,'d4',8,0,8,
+    'g3',1,0,1,'g3',1,0,1,'a3',4,0,4,'f4',2,'e4',2,'d4',2,'c4',1,0,1,'c4',2,'d4',1,'e4',1,'d4',2,'a3',2,'b3',4,
+    'g3',1,0,1,'g3',1,0,1,'a3',4,0,4,'f4',2,'e4',2,'d4',2,'c4',1,0,1,'g4',2,0,1,'d4',1,'d4',4,0,4,
+    'g3',1,0,1,'g3',1,0,1,'a3',4,0,4,'f4',2,'e4',2,'d4',2,'c4',1,0,1,'c4',2,'d4',1,'e4',1,'d4',2,'a3',2,'b3',4,
+    'e4',1,0,1,'e4',2,'a4',2,'g4',2,'f4',2,'e4',2,'d4',2,'c4',2,'b3',2,'a3',2,'e4',8, 0, 8,
+    g.songLoop],
+    # The Imperial March
+    [ g.songStart,False, 1, 0, 400,
+    440, 400, 0, 100, 440, 400, 0, 100, 440, 400, 0,100, 349, 350, 523, 150,   440, 500, 349, 350, 523, 150, 440, 650, 0,500, 659, 500, 659, 500, 659, 500,  698, 350, 523, 150, 415, 500, 349, 350, 523, 150, 440, 650, 0, 500,
+    880, 500, 440, 300, 440, 150, 880, 500, 830, 325, 784, 175, 740, 125, 698, 125,  740, 250, 0, 325,  445, 250, 622, 500, 587, 325,   554, 175,   523, 125,  466, 125,   523, 250,  0, 350,
+    349, 250,  415, 500, 349, 350, 440, 125, 523, 500, 440, 375,   523, 125, 659, 650, 0, 500,349, 250,  415, 500, 349, 375, 523, 125, 440, 500,  349, 375,   523, 125, 440, 650,0, 650,
+    880, 500, 440, 300, 440, 150, 880, 500, 830, 325, 784, 175, 740, 125, 698, 125,  740, 250, 0, 325,  445, 250, 622, 500, 587, 325,   554, 175,   523, 125,  466, 125,   523, 250,  0, 350,
+    349, 250,  415, 500, 349, 350, 440, 125, 523, 500, 440, 375,   523, 125, 659, 650, 0, 500,349, 250,  415, 500, 349, 375, 523, 125, 440, 500,  349, 375,   523, 125, 440, 650,0, 650,
+    g.songLoop],
+    # Tetris
+    [ g.songStart,False,200, 0, 4,
+    659,2, 494, 1, 523,1, 587,2, 523, 1, 493, 1, 440, 2, 440, 1, 523,1, 659,2,587,1,523,1,493,2, 493,1,523,1,587,2,659,2,523,2,440,2,440,2,0,2,587, 1,698,1,880,2,783,1,698,1,659,2,523,1,659,2,587,1,523,1,493,2,493,1,523,1,587,2,659,2,523,2,440,2,440,2,0,2,
+    329,4,261,4,293,4,246,4,261,4,220,4,207,4,246,4,329,4,261,4,293,4,246,4,261,2,329,2,440,4,415,6,0,2,
+    g.songLoop]
+    ]
+
 xMargin = const (5)
 yMargin = const(10)
 screenL = const (5)
@@ -95,13 +132,14 @@ while not exitGame:
       demo = False
   life = 3
 
+  g.startSong(bgmBuf[g.bgm])
   #menu screen
   while True:
     g.display.fill(0)
     g.display.text('Invaders', 0, 0, 1)
     g.display.rect(90,0, g.max_vol*4+2,6,1)
     g.display.fill_rect(91,1, g.vol * 4,4,1)
-    g.display.text('A Start  L Quit', 0, 10,  1)
+    g.display.text('A Start  B+L Quit', 0, 10,  1)
     if usePaddle :
         g.display.text('U Paddle', 0,20,  1)
     else :
@@ -111,13 +149,19 @@ while not exitGame:
     else :
         g.display.text('D 1-Player', 0,30, 1)
     g.display.text('R Frame/s {}'.format(g.frameRate), 0,40, 1)
-    g.display.text('B + U/D Sound', 0, 50, 1)
+    if g.bgm :
+        g.display.text('L Music {}'.format(g.bgm), 0, 50, 1)
+    else :
+        g.display.text('L Music Off', 0, 50, 1)
+#   g.display.text('B + U/D Sound', 0, 60, 1)
     g.display.show()
     sleep_ms(10)
     g.getBtn()
     if g.setVol() :
         pass
-    elif g.justReleased(g.btnL) :
+    elif g.setFrameRate() :
+        pass
+    elif g.pressed(g.btnB) and g.justPressed (g.btnL) :
         exitGame = True
         gameOver= True
         break
@@ -126,7 +170,7 @@ while not exitGame:
             demoOn = True
             g.display.fill(0)
             g.display.text('DEMO', 5, 0, 1)
-            g.display.text('B to Stop', 5, 30, 1)
+            g.display.text('B+L to Stop', 5, 30, 1)
             g.display.show()
             sleep_ms(1000)
         break
@@ -134,11 +178,12 @@ while not exitGame:
         usePaddle =  not usePaddle
     elif g.justPressed(g.btnD) :
         demo = not demo
-    elif g.justPressed(g.btnR) :
-        if g.pressed(g.btnB) :
-            g.frameRate = g.frameRate - 5 if g.frameRate > 5 else 100
+    elif g.justPressed(g.btnL) :
+        g.bgm = 0 if g.bgm >= g.maxBgm else g.bgm + 1
+        if g.bgm :
+            g.startSong(bgmBuf[g.bgm])
         else :
-            g.frameRate = g.frameRate + 5 if g.frameRate < 100 else 5
+            g.stopSong()
   #reset the game
   score = 0
   frameCount = 0
@@ -180,19 +225,23 @@ while not exitGame:
           i.move(2,0)
           if i.x >= screenR :
             spaceships.remove(i)
-      if frameCount % 20 == 10 :
-        g.playTone ('e5', 20)
-      elif frameCount % 20 == 0 :
-        g.playTone ('c5', 20)
+      if not g.bgm :
+          # only play sound effect if no background music
+          if frameCount % 20 == 10 :
+            g.playTone ('e5', 20)
+          elif frameCount % 20 == 0 :
+            g.playTone ('c5', 20)
 
 
     if not frameCount % 15 :
       postureA = not postureA
       # move Aliens once every 15 frames
-      if postureA :
-          g.playSound (80, 10)
-      else:
-          g.playSound (120, 10)
+      if not g.bgm :
+          # only play sound effect if no background music
+          if postureA :
+              g.playSound (80, 10)
+          else:
+              g.playSound (120, 10)
       for i in invaders:
         if i.x > screenR or i.x < screenL :
             dx = -dx
@@ -213,10 +262,12 @@ while not exitGame:
 
     g.getBtn()
 
+    if g.pressed (g.btnB) and g.justReleased(g.btnL) :
+        gameOver= True
+        demoOn = False
+        break
+
     if demo :
-        if g.justPressed (g.btnB) :
-            gameOver = True
-            demoOn = False
 
         if g.random (0,1) and len(bullets) < 2:
             bullets.append(Rect(gun.x+3, gun.y-1, 1, 3))
@@ -312,6 +363,9 @@ while not exitGame:
       g.playTone ('e4',100)
       g.playTone ('f4',100)
       g.playTone ('g4',100)
+      g.bgm = 0 if g.bgm >= g.maxBgm else g.bgm + 1
+      if g.bgm :
+        g.startSong(bgmBuf[g.bgm])
 
     if lost :
       lost = False;
@@ -335,7 +389,7 @@ while not exitGame:
 
     g.display_and_wait()
 
+g.deinit()
 if g.ESP32 :
-    g.deinit()
-    del sys.modules["gameESP"]
+      del sys.modules["gameESP"]
 gc.collect()

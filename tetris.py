@@ -33,6 +33,33 @@ from gameESP import *
 g=gameESP()
 
 g.frameRate = 30
+g.bgm = 3
+g.maxBgm = 3
+bgmBuf= [
+    [g.songStart, False, 1, g.songEnd],
+    # Empire Strikes Back
+    [ g.songStart,True, 100, 0, 4,
+    'g3',1,0,1,'g3',1,0,1,'g3',1,0,1,'c4',8,'g4',8,0,4,'f4',2,'e4',2,'d4',2,'c5',8,'g4',8, 0,4, 'f4',2,'e4',2,'d4',2,'c5',8,'g4',8,0,4,'f4',2,'e4',2,'f4',2,'d4',8,0,8,
+    'g3',1,0,1,'g3',1,0,1,'g3',1,0,1,'c4',8,'g4',8,0,4,'f4',2,'e4',2,'d4',2,'c5',8,'g4',8, 0,4, 'f4',2,'e4',2,'d4',2,'c5',8,'g4',8,0,4,'f4',2,'e4',2,'f4',2,'d4',8,0,8,
+    'g3',1,0,1,'g3',1,0,1,'a3',4,0,4,'f4',2,'e4',2,'d4',2,'c4',1,0,1,'c4',2,'d4',1,'e4',1,'d4',2,'a3',2,'b3',4,
+    'g3',1,0,1,'g3',1,0,1,'a3',4,0,4,'f4',2,'e4',2,'d4',2,'c4',1,0,1,'g4',2,0,1,'d4',1,'d4',4,0,4,
+    'g3',1,0,1,'g3',1,0,1,'a3',4,0,4,'f4',2,'e4',2,'d4',2,'c4',1,0,1,'c4',2,'d4',1,'e4',1,'d4',2,'a3',2,'b3',4,
+    'e4',1,0,1,'e4',2,'a4',2,'g4',2,'f4',2,'e4',2,'d4',2,'c4',2,'b3',2,'a3',2,'e4',8, 0, 8,
+    g.songLoop],
+    # The Imperial March
+    [ g.songStart,False, 1, 0, 400,
+    440, 400, 0, 100, 440, 400, 0, 100, 440, 400, 0,100, 349, 350, 523, 150,   440, 500, 349, 350, 523, 150, 440, 650, 0,500, 659, 500, 659, 500, 659, 500,  698, 350, 523, 150, 415, 500, 349, 350, 523, 150, 440, 650, 0, 500,
+    880, 500, 440, 300, 440, 150, 880, 500, 830, 325, 784, 175, 740, 125, 698, 125,  740, 250, 0, 325,  445, 250, 622, 500, 587, 325,   554, 175,   523, 125,  466, 125,   523, 250,  0, 350,
+    349, 250,  415, 500, 349, 350, 440, 125, 523, 500, 440, 375,   523, 125, 659, 650, 0, 500,349, 250,  415, 500, 349, 375, 523, 125, 440, 500,  349, 375,   523, 125, 440, 650,0, 650,
+    880, 500, 440, 300, 440, 150, 880, 500, 830, 325, 784, 175, 740, 125, 698, 125,  740, 250, 0, 325,  445, 250, 622, 500, 587, 325,   554, 175,   523, 125,  466, 125,   523, 250,  0, 350,
+    349, 250,  415, 500, 349, 350, 440, 125, 523, 500, 440, 375,   523, 125, 659, 650, 0, 500,349, 250,  415, 500, 349, 375, 523, 125, 440, 500,  349, 375,   523, 125, 440, 650,0, 650,
+    g.songLoop],
+    # Tetris
+    [ g.songStart,False,200, 0, 4,
+    659,2, 494, 1, 523,1, 587,2, 523, 1, 493, 1, 440, 2, 440, 1, 523,1, 659,2,587,1,523,1,493,2, 493,1,523,1,587,2,659,2,523,2,440,2,440,2,0,2,587, 1,698,1,880,2,783,1,698,1,659,2,523,1,659,2,587,1,523,1,493,2,493,1,523,1,587,2,659,2,523,2,440,2,440,2,0,2,
+    329,4,261,4,293,4,246,4,261,4,220,4,207,4,246,4,329,4,261,4,293,4,246,4,261,2,329,2,440,4,415,6,0,2,
+    g.songLoop]
+    ]
 
 # size = width, height = 200, 400
 size = width, height = 30, 60
@@ -228,6 +255,7 @@ exitGame = False
 demo = False
 while not exitGame:
 
+  g.startSong(bgmBuf[g.bgm])
 
   #menu screen
   while True:
@@ -237,17 +265,23 @@ while not exitGame:
     g.display.fill_rect(91,1, g.vol * 4,4,1)
     g.display.text('A Start  L Quit', 0, 10,  1)
     if demo :
-        g.display.text('D AI-Player', 0,30, 1)
+        g.display.text('D AI-Player', 0,20, 1)
     else :
-        g.display.text('D 1-Player', 0,30, 1)
-    g.display.text('R Frame/s {}'.format(g.frameRate), 0,40, 1)
-    g.display.text('B + U/D Sound', 0, 50, 1)
+        g.display.text('D 1-Player', 0,20, 1)
+    g.display.text('R Frame/s {}'.format(g.frameRate), 0,30, 1)
+    if g.bgm :
+        g.display.text('L Music {}'.format(g.bgm), 0, 40, 1)
+    else :
+        g.display.text('L Music Off', 0, 40, 1)
+    g.display.text('B + U/D Loudness', 0, 50, 1)
     g.display.show()
 
     g.getBtn()
     if g.setVol() :
         pass
-    elif g.justReleased(g.btnL) :
+    elif g.setFrameRate() :
+        pass
+    elif g.pressed(g.btnB) and g.justPressed(g.btnL) :
         exitGame = True
         gameOver= True
         break
@@ -261,11 +295,12 @@ while not exitGame:
         break
     elif g.justPressed(g.btnD) :
         demo = not demo
-    elif g.justPressed(g.btnR) :
-        if g.pressed(g.btnB) :
-            g.frameRate = g.frameRate - 5 if g.frameRate > 5 else 100
+    elif g.justPressed(g.btnL) :
+        g.bgm = 0 if g.bgm >= g.maxBgm else g.bgm + 1
+        if g.bgm :
+            g.startSong(bgmBuf[g.bgm])
         else :
-            g.frameRate = g.frameRate + 5 if g.frameRate < 100 else 5
+            g.stopSong()
     sleep_ms(10)
 
 
@@ -299,6 +334,9 @@ while not exitGame:
            g.display.show()
            sleep_ms(2000)
            reset_board()
+           g.bgm = 0 if g.bgm >= g.maxBgm else g.bgm + 1
+           if g.bgm :
+                g.startSong(bgmBuf[g.bgm])
            continue
 
     while True:

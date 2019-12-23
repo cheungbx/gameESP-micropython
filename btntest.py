@@ -67,7 +67,7 @@ while True :
 
 
   g.display.fill(0)
-  g.display.text("L+A=Exit", 40,54,1)
+  g.display.text("B+L=Exit", 40,54,1)
 
   g.getBtn()
   g.setVol()
@@ -92,7 +92,7 @@ while True :
 
 
 
-  if g.pressed(g.btnL) and g.pressed(g.btnA):
+  if g.pressed(g.btnB) and g.justReleased(g.btnL):
      g.display.text("Bye!",10, 30,1)
      g.playTone('e4', tone_dur)
      g.playTone('c4', tone_dur)
