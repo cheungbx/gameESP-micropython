@@ -32,6 +32,7 @@
 #-----------------------------------------
 # ESP8266 SPI SSD1306 version of game board layout
 # ----------------------------------------
+![Game8266%20I2C](https://github.com/cheungbx/gameesp-micropython/blob/master/game8266_SPI.jpg) 
 # micropython game hat module to use SSD1306 SPI OLED, 6 buttons and a paddle
 # SPI display runs 5 times faster than I2C  display in micropython and you need this speeds
 # for games with many moving graphics (e.g. space invdader, breakout).
@@ -77,6 +78,7 @@
 #-----------------------------------------
 # ESP8266 I2C SSD1306 version of game board layout
 # ----------------------------------------
+![Game8266%20I2C](https://github.com/cheungbx/gameesp-micropython/blob/master/game8266_I2C.jpg) 
 # mocropython game hat module to use SSD1306 I2C OLED, 6 buttons and a paddle
 # I2C display runs 5 times slower than I2C display in micropython.
 # Games with many moving graphics (e.g. space invdader, breakout) will run slower.
