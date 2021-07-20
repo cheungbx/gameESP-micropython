@@ -2,6 +2,8 @@
 #
 # Use common game module "gameESP.py" for ESP8266  or ESP32
 # by Billy Cheung  2019 10 26
+# Use gamePico.py for Raspberry Pi Pico
+# by eduardofilo   2021 07 19
 #
 #
 import gc
@@ -10,7 +12,7 @@ gc.collect()
 print (gc.mem_free())
 import utime
 from utime import sleep_ms
-import network
+#import network
 from math import sqrt
 # all dislplay, buttons, paddle, sound logics are in GameESP.mpy module
 from gameESP import *
