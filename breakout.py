@@ -7,7 +7,7 @@ import gc
 import sys
 gc.collect()
 print (gc.mem_free())
-import network
+#import network
 import utime
 from utime import sleep_ms,ticks_ms, ticks_us, ticks_diff
 from machine import Pin, SPI, PWM, ADC
