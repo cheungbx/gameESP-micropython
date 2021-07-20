@@ -9,7 +9,7 @@ gc.collect()
 print (gc.mem_free())
 import utime
 from utime import sleep_ms
-import network
+#import network
 from math import sqrt
 # all dislplay, buttons, paddle, sound logics are in gameESP.mpy module
 from gameESP import *
