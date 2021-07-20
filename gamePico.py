@@ -54,7 +54,7 @@
 # Audio
 # ======
 # Speaker- - GND
-# Speaker+ - 10K VR- GP10
+# Speaker+ - GP10
 
 # Paddle (10K VR)
 # ======
